@@ -1,0 +1,6 @@
+{
+  "name": "Atelier Postale Vintage",
+  "description": "Studio creativo per cartoline vintage con disegni retro, nuvolette, scritte calligrafiche, timbri postali, blob, foto e font personali.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
