@@ -165,9 +165,10 @@ export const PostcardCanvas: React.FC<Props> = ({
   }, [selectedElementId, selectedElement, onDeleteElement, onUpdateElement]);
 
   const handleStartMove = (e: React.MouseEvent | React.TouchEvent, el: PostcardElement) => {
-    if (editingElementId === el.id) return;
     e.stopPropagation();
     onSelectElement(el.id);
+    if (editingElementId === el.id) return;
+    
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
 
@@ -240,9 +241,12 @@ export const PostcardCanvas: React.FC<Props> = ({
   return (
     <div
       className="relative w-full max-w-[820px] aspect-[1.55] select-none mx-auto my-2"
-      onClick={() => {
-        onSelectElement(null);
-        setEditingElementId(null);
+      onClick={e => {
+        // Deselect only if clicked directly on the canvas background / wrapper
+        if (e.target === e.currentTarget) {
+          onSelectElement(null);
+          setEditingElementId(null);
+        }
       }}
     >
       {/* Postal Paper Card Container */}
@@ -251,6 +255,12 @@ export const PostcardCanvas: React.FC<Props> = ({
         className="w-full h-full relative rounded-md overflow-hidden shadow-xl border border-gray-300 transition-all duration-200"
         style={{
           backgroundColor: getBackgroundColor()
+        }}
+        onClick={e => {
+          if (e.target === containerRef.current) {
+            onSelectElement(null);
+            setEditingElementId(null);
+          }
         }}
       >
         {/* Subtle, clean paper edge shadow */}
@@ -372,6 +382,10 @@ export const PostcardCanvas: React.FC<Props> = ({
               }}
               onMouseDown={e => handleStartMove(e, el)}
               onTouchStart={e => handleStartMove(e, el)}
+              onClick={e => {
+                e.stopPropagation();
+                onSelectElement(el.id);
+              }}
               onDoubleClick={e => {
                 e.stopPropagation();
                 if (el.type === 'text' || el.type === 'calligraphy' || el.type === 'speech-bubble') {
@@ -393,7 +407,12 @@ export const PostcardCanvas: React.FC<Props> = ({
                 <>
                   <SpeechBubbleRenderer element={el} />
                   {isEditing && (
-                    <div className="absolute inset-0 flex items-center justify-center p-3 bg-white/95 z-30 rounded shadow-lg border border-blue-500">
+                    <div 
+                      className="absolute inset-0 flex items-center justify-center p-3 bg-white/95 z-30 rounded shadow-lg border border-blue-500"
+                      onMouseDown={e => e.stopPropagation()}
+                      onTouchStart={e => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
+                    >
                       <input
                         ref={inlineInputRef as any}
                         type="text"
@@ -403,7 +422,7 @@ export const PostcardCanvas: React.FC<Props> = ({
                           if (e.key === 'Enter') setEditingElementId(null);
                         }}
                         onBlur={() => setEditingElementId(null)}
-                        className="w-full text-center text-sm font-semibold border-b-2 border-blue-600 outline-none text-gray-900 bg-transparent"
+                        className="w-full text-center text-sm font-semibold border-b-2 border-blue-600 outline-none text-gray-900 bg-transparent select-text"
                       />
                     </div>
                   )}
@@ -428,6 +447,9 @@ export const PostcardCanvas: React.FC<Props> = ({
                       ref={inlineInputRef as any}
                       value={el.text}
                       onChange={e => onUpdateElement(el.id, { text: e.target.value })}
+                      onMouseDown={e => e.stopPropagation()}
+                      onTouchStart={e => e.stopPropagation()}
+                      onClick={e => e.stopPropagation()}
                       onBlur={() => setEditingElementId(null)}
                       onKeyDown={e => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -435,7 +457,7 @@ export const PostcardCanvas: React.FC<Props> = ({
                           setEditingElementId(null);
                         }
                       }}
-                      className="w-full h-full resize-none text-center outline-none bg-white/95 border-2 border-blue-600 rounded p-1 text-gray-900 shadow-lg z-30"
+                      className="w-full h-full resize-none text-center outline-none bg-white/95 border-2 border-blue-600 rounded p-1 text-gray-900 shadow-lg z-30 select-text"
                       style={{
                         fontFamily: el.fontFamily,
                         fontSize: `${el.fontSize}px`
@@ -451,13 +473,19 @@ export const PostcardCanvas: React.FC<Props> = ({
               {isSelected && (
                 <>
                   {/* Top Rotation Handle */}
-                  <div className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center">
+                  <div 
+                    className="absolute -top-7 left-1/2 -translate-x-1/2 flex flex-col items-center"
+                    onMouseDown={e => e.stopPropagation()}
+                    onTouchStart={e => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
+                  >
                     <button
                       type="button"
                       aria-label="Ruota elemento"
                       className="w-6 h-6 rounded-full bg-white text-gray-800 flex items-center justify-center shadow-md border border-gray-300 cursor-grab active:cursor-grabbing hover:scale-110 transition-transform"
                       onMouseDown={handleStartRotate}
                       onTouchStart={handleStartRotate}
+                      onClick={e => e.stopPropagation()}
                     >
                       <RotateCw className="w-3.5 h-3.5 text-blue-600" />
                     </button>
@@ -470,29 +498,35 @@ export const PostcardCanvas: React.FC<Props> = ({
                     className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-blue-600 rounded-xs cursor-nwse-resize shadow-xs"
                     onMouseDown={e => handleStartResize(e, 'nw')}
                     onTouchStart={e => handleStartResize(e, 'nw')}
+                    onClick={e => e.stopPropagation()}
                   />
                   <div
                     aria-label="Ridimensiona nord-est"
                     className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-blue-600 rounded-xs cursor-nesw-resize shadow-xs"
                     onMouseDown={e => handleStartResize(e, 'ne')}
                     onTouchStart={e => handleStartResize(e, 'ne')}
+                    onClick={e => e.stopPropagation()}
                   />
                   <div
                     aria-label="Ridimensiona sud-ovest"
                     className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-white border-2 border-blue-600 rounded-xs cursor-nesw-resize shadow-xs"
                     onMouseDown={e => handleStartResize(e, 'sw')}
                     onTouchStart={e => handleStartResize(e, 'sw')}
+                    onClick={e => e.stopPropagation()}
                   />
                   <div
                     aria-label="Ridimensiona sud-est"
                     className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-white border-2 border-blue-600 rounded-xs cursor-nwse-resize shadow-xs"
                     onMouseDown={e => handleStartResize(e, 'se')}
                     onTouchStart={e => handleStartResize(e, 'se')}
+                    onClick={e => e.stopPropagation()}
                   />
 
                   {/* Clean, Modern Floating Action Toolbar */}
                   <div
                     className="absolute -bottom-12 left-1/2 -translate-x-1/2 flex items-center gap-1.5 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-xl z-50 text-xs font-medium text-gray-800 whitespace-nowrap"
+                    onMouseDown={e => e.stopPropagation()}
+                    onTouchStart={e => e.stopPropagation()}
                     onClick={e => e.stopPropagation()}
                   >
                     {(el.type === 'text' || el.type === 'calligraphy' || el.type === 'speech-bubble') && (

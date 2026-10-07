@@ -31,7 +31,10 @@ import {
   X,
   RotateCw,
   Plus,
-  Palette
+  Palette,
+  Copy,
+  Italic,
+  Sliders
 } from 'lucide-react';
 
 export default function App() {
@@ -390,147 +393,439 @@ export default function App() {
         </div>
       </div>
 
-      {/* FLOATING TEXT EDITOR (Appears when ANY text or bubble is clicked) */}
-      {selectedElement && (selectedElement.type === 'text' || selectedElement.type === 'calligraphy' || selectedElement.type === 'speech-bubble') && (
-        <div className="bg-white border-b border-blue-200 px-6 py-2.5 flex flex-wrap items-center gap-4 z-20 shadow-xs animate-in fade-in duration-150">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-wide shrink-0">
-            Modifica Testo:
-          </span>
+      {/* CONTEXTUAL ELEMENT EDITING BAR (Appears whenever ANY element is selected) */}
+      {selectedElement && (
+        <div className="bg-white border-b border-blue-200 px-4 sm:px-6 py-2.5 flex flex-wrap items-center gap-3 sm:gap-4 z-20 shadow-xs animate-in fade-in duration-150">
+          {/* TEXT & CALLIGRAPHY */}
+          {(selectedElement.type === 'text' || selectedElement.type === 'calligraphy') && (
+            <>
+              <span className="text-xs font-bold text-blue-600 uppercase tracking-wide shrink-0">
+                Testo:
+              </span>
 
-          {/* Quick text input */}
-          <input
-            type="text"
-            value={selectedElement.text}
-            onChange={e => handleUpdateElement(selectedElement.id, { text: e.target.value })}
-            placeholder="Scrivi qui il tuo testo..."
-            className="flex-1 min-w-[200px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
-          />
+              {/* Text input */}
+              <input
+                type="text"
+                value={selectedElement.text}
+                onChange={e => handleUpdateElement(selectedElement.id, { text: e.target.value })}
+                placeholder="Scrivi qui il tuo testo..."
+                className="flex-1 min-w-[180px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 outline-none"
+              />
 
-          {/* Font dropdown */}
-          <select
-            value={selectedElement.fontFamily}
-            onChange={e => handleUpdateElement(selectedElement.id, { fontFamily: e.target.value })}
-            className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer focus:bg-white"
-          >
-            {customFonts.length > 0 && (
-              <optgroup label="I tuoi Font Personali">
-                {customFonts.map(f => (
-                  <option key={f.id} value={f.familyName}>
-                    ★ {f.name} (Caricato)
+              {/* Font selector */}
+              <select
+                value={selectedElement.fontFamily}
+                onChange={e => handleUpdateElement(selectedElement.id, { fontFamily: e.target.value })}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer focus:bg-white"
+              >
+                {customFonts.length > 0 && (
+                  <optgroup label="I tuoi Font Personali">
+                    {customFonts.map(f => (
+                      <option key={f.id} value={f.familyName}>
+                        ★ {f.name} (Caricato)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="Caratteri Scrittura Vintage">
+                  {VINTAGE_FONTS.map(f => (
+                    <option key={f.family} value={f.family}>
+                      {f.name}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+
+              {/* Font size */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs">
+                <span className="text-slate-500 font-semibold mr-1">Taglia:</span>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.max(12, selectedElement.fontSize - 4) })}
+                  className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
+                >
+                  -
+                </button>
+                <span className="font-bold w-6 text-center text-slate-800">{selectedElement.fontSize}</span>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.min(96, selectedElement.fontSize + 4) })}
+                  className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Italic toggle */}
+              <button
+                type="button"
+                onClick={() => handleUpdateElement(selectedElement.id, { italic: !selectedElement.italic })}
+                className={`p-1.5 rounded-lg border text-xs font-bold flex items-center justify-center transition-colors cursor-pointer ${
+                  selectedElement.italic
+                    ? 'bg-blue-50 border-blue-500 text-blue-700'
+                    : 'bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Corsivo (Italic)"
+              >
+                <Italic className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Color swatches */}
+              <div className="flex items-center gap-1.5">
+                {['#1F2937', '#78350F', '#881337', '#1E3A8A', '#065F46', '#D97706'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleUpdateElement(selectedElement.id, { color: c })}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      selectedElement.color === c ? 'border-blue-600 scale-110 shadow-xs ring-2 ring-blue-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* SPEECH BUBBLE */}
+          {selectedElement.type === 'speech-bubble' && (
+            <>
+              <span className="text-xs font-bold text-emerald-600 uppercase tracking-wide shrink-0">
+                Nuvoletta:
+              </span>
+
+              {/* Text input */}
+              <input
+                type="text"
+                value={selectedElement.text}
+                onChange={e => handleUpdateElement(selectedElement.id, { text: e.target.value })}
+                placeholder="Testo nella nuvoletta..."
+                className="flex-1 min-w-[180px] bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-slate-900 focus:bg-white focus:border-emerald-500 outline-none"
+              />
+
+              {/* Font selector */}
+              <select
+                value={selectedElement.fontFamily}
+                onChange={e => handleUpdateElement(selectedElement.id, { fontFamily: e.target.value })}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer focus:bg-white"
+              >
+                {customFonts.length > 0 && (
+                  <optgroup label="I tuoi Font Personali">
+                    {customFonts.map(f => (
+                      <option key={f.id} value={f.familyName}>
+                        ★ {f.name} (Caricato)
+                      </option>
+                    ))}
+                  </optgroup>
+                )}
+                <optgroup label="Caratteri Scrittura Vintage">
+                  {VINTAGE_FONTS.map(f => (
+                    <option key={f.family} value={f.family}>
+                      {f.name}
+                    </option>
+                  ))}
+                </optgroup>
+              </select>
+
+              {/* Font size */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs">
+                <span className="text-slate-500 font-semibold mr-1">Taglia:</span>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.max(12, selectedElement.fontSize - 2) })}
+                  className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
+                >
+                  -
+                </button>
+                <span className="font-bold w-6 text-center text-slate-800">{selectedElement.fontSize}</span>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.min(60, selectedElement.fontSize + 2) })}
+                  className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
+                >
+                  +
+                </button>
+              </div>
+
+              {/* Color swatches */}
+              <div className="flex items-center gap-1.5">
+                {['#1F2937', '#78350F', '#881337', '#1E3A8A', '#065F46', '#D97706'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleUpdateElement(selectedElement.id, { textColor: c, strokeColor: c })}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      selectedElement.textColor === c ? 'border-emerald-600 scale-110 shadow-xs ring-2 ring-emerald-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* PHOTO */}
+          {selectedElement.type === 'photo' && (
+            <>
+              <span className="text-xs font-bold text-purple-600 uppercase tracking-wide shrink-0">
+                Foto:
+              </span>
+
+              {/* Filter */}
+              <select
+                value={selectedElement.filter}
+                onChange={e => handleUpdateElement(selectedElement.id, { filter: e.target.value as any })}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer"
+              >
+                {PHOTO_FILTERS.map(f => (
+                  <option key={f.id} value={f.id}>
+                    Filtro: {f.label}
                   </option>
                 ))}
-              </optgroup>
-            )}
-            <optgroup label="Caratteri Scrittura Vintage">
-              {VINTAGE_FONTS.map(f => (
-                <option key={f.family} value={f.family}>
-                  {f.name}
-                </option>
-              ))}
-            </optgroup>
-          </select>
+              </select>
 
-          {/* Font size (+ / -) */}
-          <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2 py-1 text-xs">
-            <span className="text-slate-500 font-semibold mr-1">Taglia:</span>
-            <button
-              type="button"
-              onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.max(12, selectedElement.fontSize - 4) })}
-              className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
-            >
-              -
-            </button>
-            <span className="font-bold w-6 text-center text-slate-800">{selectedElement.fontSize}</span>
-            <button
-              type="button"
-              onClick={() => handleUpdateElement(selectedElement.id, { fontSize: Math.min(96, selectedElement.fontSize + 4) })}
-              className="w-6 h-6 rounded bg-white hover:bg-slate-200 font-bold border border-slate-200 cursor-pointer flex items-center justify-center text-slate-800"
-            >
-              +
-            </button>
-          </div>
+              {/* Frame */}
+              <select
+                value={selectedElement.frame}
+                onChange={e => handleUpdateElement(selectedElement.id, { frame: e.target.value as any })}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer"
+              >
+                <option value="vintage-corners">Angolini Album d'Epoca</option>
+                <option value="polaroid-retro">Istantanea Retrò</option>
+                <option value="scalloped">Dentellatura Francobollo</option>
+                <option value="oval-cameo">Cammeo Ovale Antico</option>
+                <option value="none">Senza Cornice</option>
+              </select>
+            </>
+          )}
 
-          {/* Color Circles */}
-          <div className="flex items-center gap-1.5">
-            {['#1F2937', '#78350F', '#881337', '#1E3A8A', '#065F46', '#D97706'].map(c => {
-              const activeColor =
-                selectedElement.type === 'speech-bubble'
-                  ? selectedElement.textColor
-                  : selectedElement.color;
-              return (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => {
-                    if (selectedElement.type === 'speech-bubble') {
-                      handleUpdateElement(selectedElement.id, { textColor: c, strokeColor: c });
-                    } else {
-                      handleUpdateElement(selectedElement.id, { color: c });
-                    }
-                  }}
-                  className={`w-6 h-6 rounded-full border-2 cursor-pointer transition-transform ${
-                    activeColor === c ? 'border-blue-600 scale-110 shadow-xs ring-2 ring-blue-600/30' : 'border-white'
-                  }`}
-                  style={{ backgroundColor: c }}
-                  title={`Colore ${c}`}
+          {/* DRAWING */}
+          {selectedElement.type === 'drawing' && (
+            <>
+              <span className="text-xs font-bold text-indigo-600 uppercase tracking-wide shrink-0">
+                Disegno: <span className="font-semibold text-slate-700 capitalize">{selectedElement.title}</span>
+              </span>
+
+              {/* Ink color swatches */}
+              <span className="text-xs text-slate-500 font-semibold ml-1">Inchiostro:</span>
+              <div className="flex items-center gap-1.5">
+                {['#1F2937', '#78350F', '#1E3A8A', '#D97706', '#881337', '#065F46'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleUpdateElement(selectedElement.id, { color: c })}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      selectedElement.color === c ? 'border-indigo-600 scale-110 shadow-xs ring-2 ring-indigo-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* POSTMARK */}
+          {selectedElement.type === 'postmark' && (
+            <>
+              <span className="text-xs font-bold text-amber-600 uppercase tracking-wide shrink-0">
+                Timbro:
+              </span>
+
+              {/* City text */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                <span className="text-slate-500 font-semibold">Città:</span>
+                <input
+                  type="text"
+                  value={selectedElement.city}
+                  onChange={e => handleUpdateElement(selectedElement.id, { city: e.target.value.toUpperCase() })}
+                  className="w-24 bg-transparent outline-none font-bold text-slate-800 uppercase"
                 />
-              );
-            })}
+              </div>
+
+              {/* Date text */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                <span className="text-slate-500 font-semibold">Data:</span>
+                <input
+                  type="text"
+                  value={selectedElement.dateStr}
+                  onChange={e => handleUpdateElement(selectedElement.id, { dateStr: e.target.value })}
+                  className="w-16 bg-transparent outline-none font-bold text-slate-800"
+                />
+              </div>
+
+              {/* Department */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                <span className="text-slate-500 font-semibold">Reparto:</span>
+                <input
+                  type="text"
+                  value={selectedElement.department}
+                  onChange={e => handleUpdateElement(selectedElement.id, { department: e.target.value.toUpperCase() })}
+                  className="w-24 bg-transparent outline-none font-bold text-slate-800 uppercase"
+                />
+              </div>
+
+              {/* Style */}
+              <select
+                value={selectedElement.style}
+                onChange={e => handleUpdateElement(selectedElement.id, { style: e.target.value as any })}
+                className="bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer"
+              >
+                <option value="single-ring-wavy">Onde Postali</option>
+                <option value="double-ring">Doppio Cerchio</option>
+                <option value="airmail-box">Posta Aerea</option>
+                <option value="censorship-seal">Censura Postale</option>
+                <option value="cancellation-bars">Barre Annullatrici</option>
+              </select>
+
+              {/* Ink color swatches */}
+              <div className="flex items-center gap-1.5">
+                {['#1F2937', '#78350F', '#1E3A8A', '#881337'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleUpdateElement(selectedElement.id, { inkColor: c })}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      selectedElement.inkColor === c ? 'border-amber-600 scale-110 shadow-xs ring-2 ring-amber-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* STAMP */}
+          {selectedElement.type === 'stamp' && (
+            <>
+              <span className="text-xs font-bold text-amber-700 uppercase tracking-wide shrink-0">
+                Francobollo:
+              </span>
+
+              {/* Country */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                <span className="text-slate-500 font-semibold">Nazione:</span>
+                <input
+                  type="text"
+                  value={selectedElement.country}
+                  onChange={e => handleUpdateElement(selectedElement.id, { country: e.target.value.toUpperCase() })}
+                  className="w-28 bg-transparent outline-none font-bold text-slate-800 uppercase"
+                />
+              </div>
+
+              {/* Denomination */}
+              <div className="flex items-center gap-1 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+                <span className="text-slate-500 font-semibold">Valore:</span>
+                <input
+                  type="text"
+                  value={selectedElement.denomination}
+                  onChange={e => handleUpdateElement(selectedElement.id, { denomination: e.target.value })}
+                  className="w-16 bg-transparent outline-none font-bold text-slate-800"
+                />
+              </div>
+
+              {/* Color swatches */}
+              <div className="flex items-center gap-1.5">
+                {['#881337', '#065F46', '#1E3A8A', '#78350F', '#581C87'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => handleUpdateElement(selectedElement.id, { color: c })}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      selectedElement.color === c ? 'border-amber-600 scale-110 shadow-xs ring-2 ring-amber-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* BLOBS & WAX SEALS */}
+          {(selectedElement.type === 'blob' || selectedElement.type === 'wax-seal') && (
+            <>
+              <span className="text-xs font-bold text-rose-600 uppercase tracking-wide shrink-0">
+                {selectedElement.type === 'wax-seal' ? 'Sigillo Ceralacca:' : 'Macchia / Blob:'}
+              </span>
+
+              {/* Color swatches */}
+              <div className="flex items-center gap-1.5">
+                {['#881337', '#78350F', '#D97706', '#1E3A8A', '#065F46'].map(c => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      if (selectedElement.type === 'wax-seal') {
+                        const sealCol = c === '#881337' ? 'crimson' : c === '#78350F' ? 'burgundy' : c === '#D97706' ? 'antique-gold' : c === '#1E3A8A' ? 'royal-navy' : 'forest-green';
+                        handleUpdateElement(selectedElement.id, { sealColor: sealCol as any });
+                      } else {
+                        handleUpdateElement(selectedElement.id, { color: c });
+                      }
+                    }}
+                    className={`w-5 h-5 rounded-full border-2 cursor-pointer transition-transform ${
+                      (selectedElement as any).color === c ? 'border-rose-600 scale-110 shadow-xs ring-2 ring-rose-600/30' : 'border-white'
+                    }`}
+                    style={{ backgroundColor: c }}
+                    title={`Colore ${c}`}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+
+          {/* UNIVERSAL CONTROLS: OPACITY SLIDER */}
+          <div className="flex items-center gap-1.5 bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1 text-xs">
+            <Sliders className="w-3.5 h-3.5 text-slate-500" />
+            <span className="text-slate-500 font-semibold">Opacità:</span>
+            <input
+              type="range"
+              min="0.2"
+              max="1"
+              step="0.05"
+              value={selectedElement.opacity}
+              onChange={e => handleUpdateElement(selectedElement.id, { opacity: parseFloat(e.target.value) })}
+              className="w-16 accent-blue-600 cursor-pointer"
+            />
+            <span className="text-slate-700 font-bold w-7 text-right">
+              {Math.round(selectedElement.opacity * 100)}%
+            </span>
           </div>
 
-          {/* Delete */}
+          {/* DUPLICATE BUTTON */}
           <button
             type="button"
-            onClick={() => handleDeleteElement(selectedElement.id)}
-            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs flex items-center gap-1 cursor-pointer ml-auto border border-rose-200"
+            onClick={() => handleDuplicateElement(selectedElement.id)}
+            className="px-2.5 py-1.5 rounded-lg bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold text-xs flex items-center gap-1 cursor-pointer border border-slate-300"
+            title="Duplica elemento"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Elimina</span>
+            <Copy className="w-3.5 h-3.5 text-slate-500" />
+            <span className="hidden sm:inline">Duplica</span>
           </button>
-        </div>
-      )}
 
-      {/* FLOATING PHOTO EDITOR (Appears when a photo is clicked) */}
-      {selectedElement && selectedElement.type === 'photo' && (
-        <div className="bg-white border-b border-purple-200 px-6 py-2.5 flex flex-wrap items-center gap-4 z-20 shadow-xs animate-in fade-in duration-150">
-          <span className="text-xs font-bold text-purple-600 uppercase tracking-wide shrink-0">
-            Filtro & Cornice Foto:
-          </span>
-
-          {/* Filter */}
-          <select
-            value={selectedElement.filter}
-            onChange={e => handleUpdateElement(selectedElement.id, { filter: e.target.value as any })}
-            className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer"
-          >
-            {PHOTO_FILTERS.map(f => (
-              <option key={f.id} value={f.id}>
-                Filtro: {f.label}
-              </option>
-            ))}
-          </select>
-
-          {/* Frame */}
-          <select
-            value={selectedElement.frame}
-            onChange={e => handleUpdateElement(selectedElement.id, { frame: e.target.value as any })}
-            className="bg-slate-50 border border-slate-300 rounded-lg px-3 py-1.5 text-xs font-medium text-slate-800 outline-none cursor-pointer"
-          >
-            <option value="vintage-corners">Angolini Album d'Epoca</option>
-            <option value="polaroid-retro">Istantanea Retrò</option>
-            <option value="scalloped">Dentellatura Francobollo</option>
-            <option value="oval-cameo">Cammeo Ovale Antico</option>
-            <option value="none">Senza Cornice</option>
-          </select>
-
-          {/* Delete Photo */}
+          {/* DELETE BUTTON */}
           <button
             type="button"
             onClick={() => handleDeleteElement(selectedElement.id)}
-            className="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs flex items-center gap-1 cursor-pointer ml-auto border border-rose-200"
+            className="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold text-xs flex items-center gap-1 cursor-pointer border border-rose-200"
+            title="Elimina elemento"
           >
             <Trash2 className="w-3.5 h-3.5" />
-            <span>Elimina Foto</span>
+            <span className="hidden sm:inline">Elimina</span>
+          </button>
+
+          {/* CLOSE / DESELECT (X) */}
+          <button
+            type="button"
+            onClick={() => setSelectedElementId(null)}
+            className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-700 cursor-pointer ml-auto"
+            title="Deseleziona elemento"
+            aria-label="Chiudi barra modifiche"
+          >
+            <X className="w-4 h-4" />
           </button>
         </div>
       )}

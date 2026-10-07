@@ -204,11 +204,11 @@ export class ExportService {
     try {
       const xml = new XMLSerializer().serializeToString(svg);
       const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
-      const URL = window.URL || window.webkitURL || window;
-      const blobUrl = URL.createObjectURL(svgBlob);
+      const urlHelper = window.URL || URL;
+      const blobUrl = urlHelper.createObjectURL(svgBlob);
       const img = await this.loadImage(blobUrl);
       ctx.drawImage(img, x, y, w, h);
-      URL.revokeObjectURL(blobUrl);
+      urlHelper.revokeObjectURL(blobUrl);
     } catch (e) {
       console.warn('SVG export rasterization fallback', e);
     }
